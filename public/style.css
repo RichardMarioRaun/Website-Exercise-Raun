@@ -1,0 +1,159 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #DADBDD; /* Set the background color */
+}
+
+#feed-controls {
+    margin-bottom: 20px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.article {
+    border: 1px solid #ccc;
+    background: #a7b4bc;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    height: 300px; /* Adjust height as needed */
+    overflow: hidden;
+    position: relative;
+}
+
+.image-container {
+    flex: 1;
+    overflow: hidden;
+    max-height: 50%; /* Ensure image container does not exceed half the article height */
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 3px;
+    font-size: 12px;
+    z-index: 1;
+    opacity: 0.9; /* 10% smaller */
+}
+
+.publish-date-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    background: rgba(128, 128, 128, 0.6); /* Grey with 60% transparency */
+    border-radius: 3px;
+    font-size: 12px; /* Smaller font size */
+    color: white; /* White text for visibility */
+    z-index: 2; /* Ensure it's above the article background but below other overlays if any */
+}
+
+/* Lower half of the article box for title and description */
+.article-content {
+    padding: 10px;
+    background: #a7b4bc;
+    flex-shrink: 0;
+    max-height: 100%; /* Ensure title does not exceed half the article height */
+}
+
+/* Title of the article */
+.article-content h2 {
+    font-size: 18px;
+    margin: 10px 0;
+    cursor: pointer;
+    max-height: 100%; /* Ensure title does not exceed half the article height */
+    overflow: hidden; /* Hide overflow text */
+}
+
+/* Description of the article */
+.article-content p {
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal > div {
+    background: #fff;
+    color: #000;
+    padding: 20px;
+    border-radius: 5px;
+    width: 60%;
+    height: 60%;
+    max-width: 95%;
+    max-height: 95%;
+    overflow-y: auto;
+    resize: both; /* Allow the modal to be resizable */
+    overflow: auto; /* Enable scrolling if content overflows */
+}
+
+/* Feed color classes */
+.feed-color-0 { background-color: #ff9999; }
+.feed-color-1 { background-color: #ffcc99; }
+.feed-color-2 { background-color: #ffff99; }
+.feed-color-3 { background-color: #ccff99; }
+.feed-color-4 { background-color: #99ff99; }
+.feed-color-5 { background-color: #99ffcc; }
+.feed-color-6 { background-color: #99ffff; }
+.feed-color-7 { background-color: #99ccff; }
+.feed-color-8 { background-color: #9999ff; }
+.feed-color-9 { background-color: #cc99ff; }
+
+.modal-content {
+    background: #fff;
+    color: #000;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 80%;
+    width: auto;
+    max-height: 90vh;
+    overflow-y: auto;
+    resize: both; /* Allow the modal to be resizable */
+    overflow: auto; /* Enable scrolling if content overflows */
+}
+
+.modal-content h2 {
+    margin-top: 0;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
