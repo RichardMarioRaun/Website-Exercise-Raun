@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     class Article {
-        constructor(title, link, pubDate, description, categories, source, image) {
+        constructor(title, link, pubDate, description, categories, source, image, rawXML) {
             this.title = title;
             this.link = link;
             this.pubDate = new Date(pubDate);
@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.categories = categories;
             this.source = source;
             this.image = image;
+            this.rawXML = rawXML;
         }
     }
 
@@ -42,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.addArticleToCategory(article, 'Uncategorized');
             } else {
                 article.categories.forEach(category => {
-                    if (category && category.trim() !== '') {
+                    if (typeof category === 'string' && category.trim() !== '') {
                         this.addArticleToCategory(article, category);
                     } else {
                         this.addArticleToCategory(article, 'Uncategorized');
@@ -73,63 +74,83 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/feed?url=${encodeURIComponent(url)}`);
             if (!response.ok) throw new Error('Failed to fetch feed');
             const feed = await response.json();
-            console.log('Fetched feed:', feed);
+            console.log('Fetched JSON feed:', feed);
             return feed;
         } catch (error) {
-            console.error(error);
+            console.error('Error fetching or parsing feed:', error);
             return null;
         }
     }
 
     function extractImageUrl(item) {
-        // Helper function to process media content and media thumbnail objects safely
-        function getUrlFromMediaObject(mediaObject) {
-            if (!mediaObject) return "";
-
-            // Handle arrays or single objects uniformly
-            const mediaItems = Array.isArray(mediaObject) ? mediaObject : [mediaObject];
-
-            for (const media of mediaItems) {
-                // Check if '@attributes' exists and has the 'url' property
-                if (media['@attributes'] && media['@attributes'].url) {
-                    console.log(`Found image in media object: ${media['@attributes'].url}`);
-                    return media['@attributes'].url;
-                }
-                // Some feeds might directly have the URL property without '@attributes'
-                if (media.url) {
-                    console.log(`Found image directly in media object: ${media.url}`);
-                    return media.url;
-                }
-            }
-            return "";
-        }
-
         console.log('Inspecting item for image:', item);
 
-        // Check for enclosure tag suitable for images
         if (item.enclosure && item.enclosure.type && item.enclosure.type.startsWith('image/') && item.enclosure.url) {
             console.log(`Found image in enclosure: ${item.enclosure.url}`);
             return item.enclosure.url;
         }
 
-        // Extract URL from media:content, checking safely for properties
-        const mediaContent = item['media:content'];
-        if (mediaContent) {
-            const imageUrl = getUrlFromMediaObject(mediaContent);
-            if (imageUrl) return imageUrl;
+        if (item['media:content']) {
+            const mediaContent = Array.isArray(item['media:content']) ? item['media:content'] : [item['media:content']];
+            for (const media of mediaContent) {
+                if (media.url) {
+                    console.log(`Found image in media:content: ${media.url}`);
+                    return media.url;
+                }
+                if (media['@'] && media['@'].url) {
+                    console.log(`Found image in media:content attributes: ${media['@'].url}`);
+                    return media['@'].url;
+                }
+            }
+        } else {
+            console.log('media:content does not exist.');
         }
 
-        // Similar safe check and extraction for media:thumbnail
-        const mediaThumbnail = item['media:thumbnail'];
-        if (mediaThumbnail) {
-            const imageUrl = getUrlFromMediaObject(mediaThumbnail);
-            if (imageUrl) return imageUrl;
+        if (item['media:thumbnail']) {
+            const mediaThumbnail = Array.isArray(item['media:thumbnail']) ? item['media:thumbnail'] : [item['media:thumbnail']];
+            for (const media of mediaThumbnail) {
+                if (media.url) {
+                    console.log(`Found image in media:thumbnail: ${media.url}`);
+                    return media.url;
+                }
+                if (media['@'] && media['@'].url) {
+                    console.log(`Found image in media:thumbnail attributes: ${media['@'].url}`);
+                    return media['@'].url;
+                }
+            }
+        } else {
+            console.log('media:thumbnail does not exist.');
         }
 
-        console.log('No image found for item:', item);
+        const description = item.description || item.content;
+        if (description) {
+            const imgTagMatch = description.match(/<img[^>]+src="([^">]+)"/);
+            if (imgTagMatch && imgTagMatch[1]) {
+                console.log(`Found image in description: ${imgTagMatch[1]}`);
+                return imgTagMatch[1];
+            }
+        }
+
+        const rawXML = item.rawXML;
+        if (rawXML) {
+            console.log(`Raw XML content: ${rawXML}`);
+            // Use DOMParser to parse the rawXML
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(rawXML, 'application/xml');
+            const mediaContent = xmlDoc.querySelector('media\\:content, content');
+            if (mediaContent && mediaContent.getAttribute('url')) {
+                console.log(`Found image manually in raw XML: ${mediaContent.getAttribute('url')}`);
+                return mediaContent.getAttribute('url');
+            } else {
+                console.log('No image found in raw XML.');
+            }
+        } else {
+            console.log('No raw XML found for item.');
+        }
+
+        console.log('No image found for item.');
         return "";
     }
-
 
     function parseFeed(feedData) {
         const feedTitle = feedData.title || feedData.channel?.title || 'Unknown Source';
@@ -142,10 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const link = item.link;
                 const pubDate = item.pubDate;
                 const description = item.description;
-                const categories = item.categories && item.categories.length ? item.categories.map(cat => cat._) : [];
+                const categories = item.categories && item.categories.length ? item.categories : [];
                 const image = extractImageUrl(item);
 
-                const article = new Article(title, link, pubDate, description, categories, feedTitle, image);
+                console.log('Item before creating Article:', item);
+                const article = new Article(title, link, pubDate, description, categories, feedTitle, image, item.rawXML);
+                console.log(`Raw XML for item "${title}":`, item.rawXML);  // Debug log for raw XML
                 feed.addArticle(article);
             });
         }
@@ -205,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const img = document.createElement('img');
                 img.src = article.image;
                 img.onerror = () => {
-                    img.style.display = 'none'; // Log failed image URL
+                    img.style.display = 'none';
                     console.error(`Image failed to load: ${article.image}`);
                 };
                 imageContainer.appendChild(img);
@@ -228,57 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             articleDiv.appendChild(articleContent);
 
-            // New publish date overlay
             const pubDateOverlay = document.createElement('div');
             pubDateOverlay.classList.add('publish-date-overlay');
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
-            articleDiv.appendChild(pubDateOverlay); // Adding it to the article div
-
-            // Add event listeners for opening the modal
-            articleDiv.addEventListener('click', async (event) => {
-                event.preventDefault();
-                await openArticleModal(article.link);
-            });
-            articleDiv.querySelector('h2').addEventListener('click', async (event) => {
-                event.preventDefault();
-                await openArticleModal(article.link);
-            });
+            articleDiv.appendChild(pubDateOverlay);
 
             feedContainer.appendChild(articleDiv);
         });
-    }
-
-
-    async function openArticleModal(url) {
-        try {
-            const response = await fetch('/api/clean-content', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url })
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch article content');
-            const data = await response.json();
-
-            const modal = document.getElementById('article-modal');
-            const contentDiv = document.getElementById('article-content');
-            contentDiv.innerHTML = data.content;
-
-            modal.style.display = 'flex';
-
-            const closeModal = document.getElementById('close-article-modal');
-            closeModal.onclick = () => {
-                modal.style.display = 'none';
-            };
-
-            modal.onclick = (event) => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                }
-            };
-        } catch (error) {
-            console.error(error);
-        }
     }
 
     function updateRSSFeedList() {
