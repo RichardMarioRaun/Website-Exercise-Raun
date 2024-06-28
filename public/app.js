@@ -11,20 +11,27 @@ document.addEventListener('DOMContentLoaded', () => {
             this.rawXML = rawXML;
         }
         async openInNewWindow() {
-            const url = `https://uptime-mercury-api.azurewebsites.net/webparser?url=${encodeURIComponent(this.link)}`;
+            const url = `https://uptime-mercury-api.azurewebsites.net/webparser`;
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Failed to fetch cleaned article');
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url: this.link })
+                });
+                if (!response.ok) throw new Error(`Failed to fetch cleaned article, status: ${response.status}`);
                 const data = await response.json();
                 const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
                 newWindow.document.write(data.content);
                 newWindow.document.title = this.title;
             } catch (error) {
                 console.error('Error fetching or displaying cleaned article:', error);
+                console.error('URL:', url);
+                console.error('Payload:', { url: this.link });
             }
         }
     }
-    
 
     class Category {
         constructor(name) {
@@ -191,17 +198,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayFeed(articles) {
         const feedContainer = document.getElementById('feeds');
         feedContainer.innerHTML = '';
-    
+
         articles.sort((a, b) => b.pubDate - a.pubDate);
-    
+
         articles.forEach(article => {
             const articleDiv = document.createElement('div');
             articleDiv.classList.add('article');
-    
+
             const overlay = document.createElement('div');
             overlay.classList.add('overlay');
             overlay.textContent = article.source || 'Unknown Source';
-    
+
             let colorClass;
             if (feedColors.has(article.source)) {
                 colorClass = feedColors.get(article.source);
@@ -210,12 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedColors.set(article.source, colorClass);
             }
             overlay.classList.add(colorClass);
-    
+
             articleDiv.appendChild(overlay);
-    
+
             const articleContent = document.createElement('div');
             articleContent.classList.add('article-content');
-    
+
             if (article.image) {
                 const imageContainer = document.createElement('div');
                 imageContainer.classList.add('image-container');
@@ -226,34 +233,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Image failed to load: ${article.image}`);
                 };
                 imageContainer.appendChild(img);
-    
+
                 articleContent.appendChild(imageContainer);
             } else {
                 articleDiv.classList.add('no-image');
             }
-    
+
             const title = document.createElement('h2');
             title.textContent = article.title;
-    
+
             const description = document.createElement('p');
             description.textContent = article.description;
-    
+
             articleContent.appendChild(title);
             articleContent.appendChild(description);
-    
+
             articleDiv.appendChild(articleContent);
-    
+
             const pubDateOverlay = document.createElement('div');
             pubDateOverlay.classList.add('publish-date-overlay');
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
             articleDiv.appendChild(pubDateOverlay);
-    
+
             articleDiv.onclick = () => article.openInNewWindow(); // Add click event listener
-    
+
             feedContainer.appendChild(articleDiv);
         });
     }
-    
 
     function updateRSSFeedList() {
         const rssFeedList = document.getElementById('rss-feed-list');
