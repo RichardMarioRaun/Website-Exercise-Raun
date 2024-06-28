@@ -26,9 +26,16 @@ app.get('/api/feed', async (req, res) => {
         parsedFeed.items = parsedFeed.items.map((item, index) => {
             const serializer = new XMLSerializer();
             const rawXML = serializer.serializeToString(items[index]);
-            console.log(`Before attaching raw XML: ${JSON.stringify(item)}`);
-            const newItem = { ...item, rawXML };
-            console.log(`After attaching raw XML: ${JSON.stringify(newItem)}`);
+
+            // Extract description from raw XML if missing
+            let description = item.description;
+            if (!description) {
+                const descriptionNode = items[index].getElementsByTagName('description')[0];
+                description = descriptionNode ? descriptionNode.textContent : '';
+            }
+
+            const newItem = { ...item, rawXML, description };
+            console.log(`After attaching raw XML and description: ${JSON.stringify(newItem)}`);
             return newItem;
         });
 

@@ -83,10 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function extractImageUrl(item) {
-        console.log('Inspecting item for image:', item);
-
         if (item.enclosure && item.enclosure.type && item.enclosure.type.startsWith('image/') && item.enclosure.url) {
-            console.log(`Found image in enclosure: ${item.enclosure.url}`);
             return item.enclosure.url;
         }
 
@@ -94,58 +91,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const mediaContent = Array.isArray(item['media:content']) ? item['media:content'] : [item['media:content']];
             for (const media of mediaContent) {
                 if (media.url) {
-                    console.log(`Found image in media:content: ${media.url}`);
                     return media.url;
                 }
                 if (media['@'] && media['@'].url) {
-                    console.log(`Found image in media:content attributes: ${media['@'].url}`);
                     return media['@'].url;
                 }
             }
-        } else {
-            console.log('media:content does not exist.');
         }
 
         if (item['media:thumbnail']) {
             const mediaThumbnail = Array.isArray(item['media:thumbnail']) ? item['media:thumbnail'] : [item['media:thumbnail']];
             for (const media of mediaThumbnail) {
                 if (media.url) {
-                    console.log(`Found image in media:thumbnail: ${media.url}`);
                     return media.url;
                 }
                 if (media['@'] && media['@'].url) {
-                    console.log(`Found image in media:thumbnail attributes: ${media['@'].url}`);
                     return media['@'].url;
                 }
             }
-        } else {
-            console.log('media:thumbnail does not exist.');
         }
 
         const description = item.description || item.content;
         if (description) {
             const imgTagMatch = description.match(/<img[^>]+src="([^">]+)"/);
             if (imgTagMatch && imgTagMatch[1]) {
-                console.log(`Found image in description: ${imgTagMatch[1]}`);
                 return imgTagMatch[1];
             }
         }
 
         const rawXML = item.rawXML;
         if (rawXML) {
-            console.log(`Raw XML content: ${rawXML}`);
-            // Use DOMParser to parse the rawXML
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(rawXML, 'application/xml');
             const mediaContent = xmlDoc.querySelector('media\\:content, content');
             if (mediaContent && mediaContent.getAttribute('url')) {
-                console.log(`Found image manually in raw XML: ${mediaContent.getAttribute('url')}`);
                 return mediaContent.getAttribute('url');
-            } else {
-                console.log('No image found in raw XML.');
             }
-        } else {
-            console.log('No raw XML found for item.');
         }
 
         console.log('No image found for item.');
@@ -162,13 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const title = item.title;
                 const link = item.link;
                 const pubDate = item.pubDate;
-                const description = item.description;
+                const description = item.description || item.contentSnippet || item.content;
+                console.log('Parsed description:', description); // Log description for debugging
                 const categories = item.categories && item.categories.length ? item.categories : [];
                 const image = extractImageUrl(item);
 
-                console.log('Item before creating Article:', item);
                 const article = new Article(title, link, pubDate, description, categories, feedTitle, image, item.rawXML);
-                console.log(`Raw XML for item "${title}":`, item.rawXML);  // Debug log for raw XML
                 feed.addArticle(article);
             });
         }
@@ -197,17 +177,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayFeed(articles) {
         const feedContainer = document.getElementById('feeds');
         feedContainer.innerHTML = '';
-
+    
         articles.sort((a, b) => b.pubDate - a.pubDate);
-
+    
         articles.forEach(article => {
             const articleDiv = document.createElement('div');
             articleDiv.classList.add('article');
-
+    
             const overlay = document.createElement('div');
             overlay.classList.add('overlay');
             overlay.textContent = article.source || 'Unknown Source';
-
+    
             let colorClass;
             if (feedColors.has(article.source)) {
                 colorClass = feedColors.get(article.source);
@@ -216,12 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedColors.set(article.source, colorClass);
             }
             overlay.classList.add(colorClass);
-
+    
             articleDiv.appendChild(overlay);
-
+    
             const articleContent = document.createElement('div');
             articleContent.classList.add('article-content');
-
+    
             if (article.image) {
                 const imageContainer = document.createElement('div');
                 imageContainer.classList.add('image-container');
@@ -232,30 +212,29 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Image failed to load: ${article.image}`);
                 };
                 imageContainer.appendChild(img);
-
-                const title = document.createElement('h2');
-                title.textContent = article.title;
-
+    
                 articleContent.appendChild(imageContainer);
-                articleContent.appendChild(title);
             } else {
-                const title = document.createElement('h2');
-                title.textContent = article.title;
-
-                const description = document.createElement('p');
-                description.textContent = article.description;
-
-                articleContent.appendChild(title);
-                articleContent.appendChild(description);
+                articleDiv.classList.add('no-image');
             }
-
+    
+            const title = document.createElement('h2');
+            title.textContent = article.title;
+    
+            const description = document.createElement('p');
+            description.textContent = article.description;
+            console.log('Displaying description:', article.description); // Log description for debugging
+    
+            articleContent.appendChild(title);
+            articleContent.appendChild(description);
+    
             articleDiv.appendChild(articleContent);
-
+    
             const pubDateOverlay = document.createElement('div');
             pubDateOverlay.classList.add('publish-date-overlay');
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
             articleDiv.appendChild(pubDateOverlay);
-
+    
             feedContainer.appendChild(articleDiv);
         });
     }

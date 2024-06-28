@@ -27,13 +27,25 @@ body {
 .image-container {
     flex: 1;
     overflow: hidden;
-    max-height: 50%; /* Ensure image container does not exceed half the article height */
+    height: 45%; /* Ensure image container does not exceed half the article height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .image-container img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: cover; /* Cover the container, cropping if necessary */
+    object-position: center; /* Position the image center within its container */
+    max-width: 100%; /* Ensure the image scales down appropriately */
+}
+
+.no-image .article-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .overlay {
@@ -64,20 +76,17 @@ body {
 .article-content {
     padding: 10px;
     background: #a7b4bc;
-    flex-shrink: 0;
-    max-height: 100%; /* Ensure title does not exceed half the article height */
+    flex: 1 1 50%;
+    overflow: hidden;
 }
 
-/* Title of the article */
 .article-content h2 {
     font-size: 18px;
     margin: 10px 0;
     cursor: pointer;
-    max-height: 100%; /* Ensure title does not exceed half the article height */
     overflow: hidden; /* Hide overflow text */
 }
 
-/* Description of the article */
 .article-content p {
     font-size: 14px;
     color: #666;
