@@ -10,7 +10,21 @@ document.addEventListener('DOMContentLoaded', () => {
             this.image = image;
             this.rawXML = rawXML;
         }
+        async openInNewWindow() {
+            const url = `https://uptime-mercury-api.azurewebsites.net/webparser?url=${encodeURIComponent(this.link)}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch cleaned article');
+                const data = await response.json();
+                const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                newWindow.document.write(data.content);
+                newWindow.document.title = this.title;
+            } catch (error) {
+                console.error('Error fetching or displaying cleaned article:', error);
+            }
+        }
     }
+    
 
     class Category {
         constructor(name) {
@@ -223,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
             const description = document.createElement('p');
             description.textContent = article.description;
-            console.log('Displaying description:', article.description); // Log description for debugging
     
             articleContent.appendChild(title);
             articleContent.appendChild(description);
@@ -235,9 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
             articleDiv.appendChild(pubDateOverlay);
     
+            articleDiv.onclick = () => article.openInNewWindow(); // Add click event listener
+    
             feedContainer.appendChild(articleDiv);
         });
     }
+    
 
     function updateRSSFeedList() {
         const rssFeedList = document.getElementById('rss-feed-list');
