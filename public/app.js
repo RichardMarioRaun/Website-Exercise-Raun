@@ -10,8 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.image = image;
             this.rawXML = rawXML;
         }
-        async openInNewWindow() {
-            const url = `https://uptime-mercury-api.azurewebsites.net/webparser`;
+
+        async openInModal() {
+            const url = `/api/clean-article`; // Use the proxy endpoint
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -22,9 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 if (!response.ok) throw new Error(`Failed to fetch cleaned article, status: ${response.status}`);
                 const data = await response.json();
-                const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-                newWindow.document.write(data.content);
-                newWindow.document.title = this.title;
+                const modal = document.getElementById('article-modal');
+                const articleContent = document.getElementById('article-content');
+                articleContent.innerHTML = data.content;
+                modal.style.display = 'flex';
+                document.title = this.title;
             } catch (error) {
                 console.error('Error fetching or displaying cleaned article:', error);
                 console.error('URL:', url);
@@ -66,6 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 article.categories.forEach(category => {
                     if (typeof category === 'string' && category.trim() !== '') {
                         this.addArticleToCategory(article, category);
+                    } else if (category._) {
+                        this.addArticleToCategory(article, category._);
                     } else {
                         this.addArticleToCategory(article, 'Uncategorized');
                     }
@@ -166,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pubDate = item.pubDate;
                 const description = item.description || item.contentSnippet || item.content;
                 console.log('Parsed description:', description); // Log description for debugging
-                const categories = item.categories && item.categories.length ? item.categories : [];
+                const categories = item.categories && item.categories.length ? item.categories.map(cat => cat._ || cat) : [];
                 const image = extractImageUrl(item);
 
                 const article = new Article(title, link, pubDate, description, categories, feedTitle, image, item.rawXML);
@@ -255,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
             articleDiv.appendChild(pubDateOverlay);
 
-            articleDiv.onclick = () => article.openInNewWindow(); // Add click event listener
+            articleDiv.onclick = () => article.openInModal(); // Add click event listener
 
             feedContainer.appendChild(articleDiv);
         });
@@ -366,4 +371,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         await loadAllFeeds();
     })();
+
+    // Event listener for closing the modal
+    document.getElementById('close-article-modal').onclick = () => {
+        document.getElementById('article-modal').style.display = 'none';
+    };
+
+    // Event listener for clicking outside the modal to close it
+    window.onclick = (event) => {
+        const modal = document.getElementById('article-modal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
 });

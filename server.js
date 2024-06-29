@@ -46,4 +46,24 @@ app.get('/api/feed', async (req, res) => {
     }
 });
 
+// Proxy endpoint to handle Mercury API requests
+app.post('/api/clean-article', async (req, res) => {
+    const { url } = req.body;
+    try {
+        const response = await fetch('https://uptime-mercury-api.azurewebsites.net/webparser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url })
+        });
+        if (!response.ok) throw new Error(`Failed to fetch cleaned article, status: ${response.status}`);
+        const data = await response.json();
+        res.status(200).json(data);
+    } catch (error) {
+        console.error('Error fetching cleaned article:', error);
+        res.status(500).json({ error: 'Failed to fetch cleaned article' });
+    }
+});
+
 app.listen(port, () => console.log(`Server running on port ${port}`));
