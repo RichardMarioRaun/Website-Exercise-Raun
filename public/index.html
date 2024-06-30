@@ -7,33 +7,42 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>News Feed</h1>
-<div id="feed-controls">
-    <button id="edit-feeds-button">Edit RSS Feeds</button>
-    <select id="category-dropdown"></select>
-</div>
-<ul id="feed-list"></ul>
-<div id="feeds" class="grid-container"></div>
+    <header>
+        <h1>News Feed</h1>
+        <nav>
+            <button id="edit-feeds-button">Edit RSS Feeds</button>
+            <select id="category-dropdown"></select>
+        </nav>
+    </header>
 
-<div id="rss-feed-modal" class="modal">
-    <div class="modal-content">
-        <span id="close-modal" class="close">&times;</span>
-        <h2>Edit RSS Feeds</h2>
-        <input type="text" id="feed-url-input" placeholder="Enter RSS Feed URL">
-        <button id="add-feed-button">Add Feed</button>
-        <ul id="rss-feed-list"></ul>
-        <button id="save-feeds">Save Changes</button>
+    <div id="feed-controls">
     </div>
-</div>
+    <ul id="feed-list"></ul>
+    <div id="feeds" class="grid-container"></div>
 
-<!-- Modal for displaying article content -->
-<div id="article-modal" class="modal">
-    <div class="modal-content">
-        <span id="close-article-modal" class="close">&times;</span>
-        <div id="article-content"></div>
+    <div id="rss-feed-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-modal" class="close">&times;</span>
+            <h2>Edit RSS Feeds</h2>
+            <input type="text" id="feed-url-input" placeholder="Enter RSS Feed URL">
+            <button id="add-feed-button">Add Feed</button>
+            <ul id="rss-feed-list"></ul>
+            <button id="save-feeds">Save Changes</button>
+        </div>
     </div>
-</div>
 
-<script src="app.js"></script>
+    <!-- Modal for displaying article content -->
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <span id="close-article-modal" class="close">&times;</span>
+            <div id="article-content"></div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Created by Richard Mario Raun</p>
+    </footer>
+
+    <script src="app.js"></script>
 </body>
 </html>

@@ -353,6 +353,26 @@ document.addEventListener('DOMContentLoaded', () => {
         displayCategories(currentFeed);
         displayFeed(currentFeed.allArticles);
     }
+    
+    function updateGridLayout() {
+        const feedContainer = document.getElementById('feeds');
+        if (window.innerWidth <= 768) {
+            feedContainer.classList.remove('grid-three-columns', 'grid-two-columns');
+            feedContainer.classList.add('grid-one-column');
+        } else if (window.innerWidth <= 1024) {
+            feedContainer.classList.remove('grid-three-columns', 'grid-one-column');
+            feedContainer.classList.add('grid-two-columns');
+        } else {
+            feedContainer.classList.remove('grid-two-columns', 'grid-one-column');
+            feedContainer.classList.add('grid-three-columns');
+        }
+    }
+
+    // Update the grid layout on page load and window resize
+    window.addEventListener('resize', updateGridLayout);
+    updateGridLayout();
+
+
 
     function mergeFeeds(feeds) {
         const mergedFeed = new Feed();

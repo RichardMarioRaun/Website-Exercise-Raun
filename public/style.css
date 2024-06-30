@@ -1,16 +1,77 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #DADBDD; /* Set the background color */
+    margin: 0; /* Remove default margin */
+    padding: 0; /* Remove padding */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Ensure body takes full height */
+}
+
+header {
+    position: sticky; /* Make the header sticky */
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: #333;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    z-index: 1000;
+    margin-top: 0; /* Ensure header starts at the top */
+    box-sizing: border-box;
+}
+
+header h1 {
+    margin: 0;
+}
+
+header nav {
+    display: flex;
+    gap: 15px;
+    align-items: center; /* Ensure items are centered vertically */
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+header nav button,
+header nav select {
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin: 5px 0; /* Add margin for spacing in smaller screens */
+}
+
+header nav button:hover,
+header nav select:hover {
+    background-color: #555;
 }
 
 #feed-controls {
-    margin-bottom: 20px;
+    display: none; /* Hide the feed controls as it is moved to the header */
 }
 
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    padding: 20px; /* Add padding to the grid container */
+    flex: 1; /* Make the grid container take remaining space */
+}
+
+.grid-container.grid-three-columns {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-container.grid-two-columns {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-container.grid-one-column {
+    grid-template-columns: 1fr;
 }
 
 .article {
@@ -123,7 +184,7 @@ body {
 .feed-color-0 { background-color: #ff9999; }
 .feed-color-1 { background-color: #ffcc99; }
 .feed-color-2 { background-color: #ffff99; }
-.feed-color-3 { background-color: #ccff99; }
+feed-color-3 { background-color: #ccff99; }
 .feed-color-4 { background-color: #99ff99; }
 .feed-color-5 { background-color: #99ffcc; }
 .feed-color-6 { background-color: #99ffff; }
@@ -164,4 +225,37 @@ body {
 
 .hidden {
     display: none;
+}
+
+footer {
+    background-color: #333;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    width: 100%;
+    margin-top: auto; /* Push footer to the bottom */
+}
+
+footer p {
+    color: #ccc; /* Light grey text for the creator's name */
+    margin: 5px 0 0;
+}
+
+/* Media queries */
+@media (max-width: 768px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .grid-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    .grid-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
