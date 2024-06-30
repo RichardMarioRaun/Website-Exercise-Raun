@@ -203,17 +203,22 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayFeed(articles) {
         const feedContainer = document.getElementById('feeds');
         feedContainer.innerHTML = '';
-
+    
         articles.sort((a, b) => b.pubDate - a.pubDate);
-
+    
         articles.forEach(article => {
+            // Check if the article has a title and either an image or a description
+            if (!article.title || (!article.image && !article.description)) {
+                return; // Skip rendering this article
+            }
+    
             const articleDiv = document.createElement('div');
             articleDiv.classList.add('article');
-
+    
             const overlay = document.createElement('div');
             overlay.classList.add('overlay');
             overlay.textContent = article.source || 'Unknown Source';
-
+    
             let colorClass;
             if (feedColors.has(article.source)) {
                 colorClass = feedColors.get(article.source);
@@ -222,12 +227,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedColors.set(article.source, colorClass);
             }
             overlay.classList.add(colorClass);
-
+    
             articleDiv.appendChild(overlay);
-
+    
             const articleContent = document.createElement('div');
             articleContent.classList.add('article-content');
-
+    
             if (article.image) {
                 const imageContainer = document.createElement('div');
                 imageContainer.classList.add('image-container');
@@ -238,33 +243,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Image failed to load: ${article.image}`);
                 };
                 imageContainer.appendChild(img);
-
+    
                 articleContent.appendChild(imageContainer);
             } else {
                 articleDiv.classList.add('no-image');
             }
-
+    
             const title = document.createElement('h2');
             title.textContent = article.title;
-
+    
             const description = document.createElement('p');
             description.textContent = article.description;
-
+    
             articleContent.appendChild(title);
             articleContent.appendChild(description);
-
+    
             articleDiv.appendChild(articleContent);
-
+    
             const pubDateOverlay = document.createElement('div');
             pubDateOverlay.classList.add('publish-date-overlay');
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
             articleDiv.appendChild(pubDateOverlay);
-
+    
             articleDiv.onclick = () => article.openInModal(); // Add click event listener
-
+    
             feedContainer.appendChild(articleDiv);
         });
     }
+    
 
     function updateRSSFeedList() {
         const rssFeedList = document.getElementById('rss-feed-list');

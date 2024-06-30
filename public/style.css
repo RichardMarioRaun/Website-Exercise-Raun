@@ -42,10 +42,7 @@ body {
 }
 
 .no-image .article-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    padding-top: 30px; /* Add padding to move title down */
 }
 
 .overlay {
@@ -78,6 +75,8 @@ body {
     background: #a7b4bc;
     flex: 1 1 50%;
     overflow: hidden;
+    position: relative;
+    margin-bottom: 40px; /* Add margin to prevent overlap with the publish date overlay */
 }
 
 .article-content h2 {
