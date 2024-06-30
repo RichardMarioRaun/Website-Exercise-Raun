@@ -182,6 +182,7 @@ header nav select:hover {
 
 .modal-content img {
     max-width: 50%; /* Reduce the size of images by 50% */
+    height: auto;
 }
 
 .modal-content {

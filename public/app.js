@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Article class to represent an article and handle modal display
     class Article {
         constructor(title, link, pubDate, description, categories, source, image, rawXML) {
             this.title = title;
@@ -11,8 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
             this.rawXML = rawXML;
         }
 
+        // Method to open the article in a modal
         async openInModal() {
-            const url = `/api/clean-article`; // Use the proxy endpoint
+            const url = `/api/clean-article`; // Proxy endpoint for fetching cleaned article content
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -25,11 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 const modal = document.getElementById('article-modal');
                 const articleContent = document.getElementById('article-content');
-                if (data.content) {
+
+                if (data.content && !data.content.includes('<p id="ajax-error-message" class="ajax-error-message">')) {
                     articleContent.innerHTML = data.content;
                 } else {
-                    articleContent.innerHTML = `Article content not found, <a href="${this.link}" target="_blank">read the article here</a>.`;
+                    articleContent.innerHTML = `Article content not found, <a href="${this.link}" target="_blank">read the full article here</a>.`;
                 }
+
+                // Resize images in the modal content
+                const images = articleContent.querySelectorAll('img');
+                images.forEach(img => {
+                    img.style.maxWidth = '50%';
+                    img.style.height = 'auto';
+                });
+
                 modal.style.display = 'flex';
                 document.title = this.title;
             } catch (error) {
@@ -40,17 +51,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Category class to represent a category of articles
     class Category {
         constructor(name) {
             this.name = name;
             this.articles = [];
         }
 
+        // Method to add an article to the category
         addArticle(article) {
             this.articles.push(article);
         }
     }
 
+    // Feed class to represent a feed and manage its categories and articles
     class Feed {
         constructor(title) {
             this.title = title;
@@ -58,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.allArticles = [];
         }
 
+        // Method to add an article to a specific category
         addArticleToCategory(article, categoryName) {
             if (!this.categories.has(categoryName)) {
                 this.categories.set(categoryName, new Category(categoryName));
@@ -65,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.categories.get(categoryName).addArticle(article);
         }
 
+        // Method to add an article to the feed and categorize it
         addArticle(article) {
             this.allArticles.push(article);
             if (article.categories.length === 0) {
@@ -82,10 +98,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Method to get all categories in the feed
         getCategories() {
             return Array.from(this.categories.values());
         }
 
+        // Method to get articles by category name
         getArticlesByCategory(categoryName) {
             if (categoryName === 'All') {
                 return this.allArticles;
@@ -94,11 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Load saved RSS feeds from localStorage or initialize an empty array
     const feeds = JSON.parse(localStorage.getItem('rssFeeds')) || [];
     let currentFeed = new Feed();
 
+    // Map to store colors for feed sources
     const feedColors = new Map();
 
+    // Function to fetch a feed from a URL
     async function fetchFeed(url) {
         try {
             const response = await fetch(`/api/feed?url=${encodeURIComponent(url)}`);
@@ -112,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to extract image URL from a feed item
     function extractImageUrl(item) {
         if (item.enclosure && item.enclosure.type && item.enclosure.type.startsWith('image/') && item.enclosure.url) {
             return item.enclosure.url;
@@ -163,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return "";
     }
 
+    // Function to parse feed data into Feed and Article objects
     function parseFeed(feedData) {
         const feedTitle = feedData.title || feedData.channel?.title || 'Unknown Source';
         console.log('Parsing feed:', feedTitle, feedData);
@@ -185,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return feed;
     }
 
+    // Function to display categories in the category dropdown
     function displayCategories(feed) {
         const categoryDropdown = document.getElementById('category-dropdown');
         categoryDropdown.innerHTML = '<option value="All">All</option>';
@@ -199,30 +223,33 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryDropdown.onchange = () => filterByCategory(categoryDropdown.value, feed);
     }
 
+    // Function to filter articles by category and display them
     function filterByCategory(categoryName, feed) {
         const articles = feed.getArticlesByCategory(categoryName);
         displayFeed(articles);
     }
 
+    // Function to display articles in the feed container
     function displayFeed(articles) {
         const feedContainer = document.getElementById('feeds');
         feedContainer.innerHTML = '';
-    
+
+        // Sort articles by publication date (newest first)
         articles.sort((a, b) => b.pubDate - a.pubDate);
-    
+
         articles.forEach(article => {
             // Check if the article has a title and either an image or a description
             if (!article.title || (!article.image && !article.description)) {
                 return; // Skip rendering this article
             }
-    
+
             const articleDiv = document.createElement('div');
             articleDiv.classList.add('article');
-    
+
             const overlay = document.createElement('div');
             overlay.classList.add('overlay');
             overlay.textContent = article.source || 'Unknown Source';
-    
+
             let colorClass;
             if (feedColors.has(article.source)) {
                 colorClass = feedColors.get(article.source);
@@ -231,12 +258,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 feedColors.set(article.source, colorClass);
             }
             overlay.classList.add(colorClass);
-    
+
             articleDiv.appendChild(overlay);
-    
+
             const articleContent = document.createElement('div');
             articleContent.classList.add('article-content');
-    
+
             if (article.image) {
                 const imageContainer = document.createElement('div');
                 imageContainer.classList.add('image-container');
@@ -247,34 +274,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Image failed to load: ${article.image}`);
                 };
                 imageContainer.appendChild(img);
-    
+
                 articleContent.appendChild(imageContainer);
             } else {
                 articleDiv.classList.add('no-image');
             }
-    
+
             const title = document.createElement('h2');
             title.textContent = article.title;
-    
+
             const description = document.createElement('p');
             description.textContent = article.description;
-    
+
             articleContent.appendChild(title);
             articleContent.appendChild(description);
-    
+
             articleDiv.appendChild(articleContent);
-    
+
             const pubDateOverlay = document.createElement('div');
             pubDateOverlay.classList.add('publish-date-overlay');
             pubDateOverlay.textContent = `Published on: ${article.pubDate.toDateString()}`;
             articleDiv.appendChild(pubDateOverlay);
-    
+
             articleDiv.onclick = () => article.openInModal(); // Add click event listener
-    
+
             feedContainer.appendChild(articleDiv);
         });
     }
 
+    // Function to update the RSS feed list in the modal
     function updateRSSFeedList() {
         const rssFeedList = document.getElementById('rss-feed-list');
         rssFeedList.innerHTML = '';
@@ -296,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Function to edit an RSS feed URL
     function editRSSFeed(index) {
         const newUrl = prompt('Enter new RSS Feed URL:', feeds[index].url);
         if (newUrl) {
@@ -306,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Function to delete an RSS feed
     function deleteRSSFeed(index) {
         feeds.splice(index, 1);
         updateRSSFeedList();
@@ -313,21 +343,25 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAllFeeds();
     }
 
+    // Function to save feeds to localStorage
     function saveFeeds() {
         localStorage.setItem('rssFeeds', JSON.stringify(feeds));
     }
 
+    // Event listener for opening the edit feeds modal
     document.getElementById('edit-feeds-button').onclick = () => {
         const modal = document.getElementById('rss-feed-modal');
         modal.style.display = 'block';
         updateRSSFeedList();
     };
 
+    // Event listener for closing the edit feeds modal
     document.getElementById('close-modal').onclick = () => {
         const modal = document.getElementById('rss-feed-modal');
         modal.style.display = 'none';
     };
 
+    // Event listener for saving feeds and closing the modal
     document.getElementById('save-feeds').onclick = () => {
         const modal = document.getElementById('rss-feed-modal');
         modal.style.display = 'none';
@@ -335,14 +369,17 @@ document.addEventListener('DOMContentLoaded', () => {
         loadAllFeeds();
     };
 
+    // Event listener for adding a new feed
     document.getElementById('add-feed-button').onclick = () => {
         const newFeedUrl = document.getElementById('feed-url-input').value;
         if (newFeedUrl) {
             feeds.push({ url: newFeedUrl });
             updateRSSFeedList();
+            document.getElementById('feed-url-input').value = ''; // Clear the input field
         }
     };
 
+    // Function to load all feeds and display them
     async function loadAllFeeds() {
         const feedObjects = [];
         for (const feed of feeds) {
@@ -357,6 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displayFeed(currentFeed.allArticles);
     }
 
+    // Function to update the grid layout based on screen size
     function updateGridLayout() {
         const feedContainer = document.getElementById('feeds');
         if (window.innerWidth <= 768) {
@@ -375,6 +413,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', updateGridLayout);
     updateGridLayout();
 
+    // Function to merge multiple feeds into one
     function mergeFeeds(feeds) {
         const mergedFeed = new Feed();
         feeds.forEach(feed => {
@@ -385,6 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return mergedFeed;
     }
 
+    // Initial load of feeds on page load
     (async () => {
         if (feeds.length === 0) {
             const defaultUrl = 'https://flipboard.com/@raimoseero/feed-nii8kd0sz.rss';
@@ -399,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadAllFeeds();
     })();
 
-    // Event listener for closing the modal
+    // Event listener for closing the article modal
     document.getElementById('close-article-modal').onclick = () => {
         document.getElementById('article-modal').style.display = 'none';
     };
