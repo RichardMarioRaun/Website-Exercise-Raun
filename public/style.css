@@ -173,24 +173,16 @@ header nav select:hover {
     border-radius: 5px;
     width: 85%;
     height: 85%;
-    max-width: 95%;
-    max-height: 95%;
+    max-width: 85%; /* Updated from 95% */
+    max-height: 85%; /* Updated from 95% */
     overflow-y: auto;
     resize: both; /* Allow the modal to be resizable */
     overflow: auto; /* Enable scrolling if content overflows */
 }
 
-/* Feed color classes */
-.feed-color-0 { background-color: #ff9999; }
-.feed-color-1 { background-color: #ffcc99; }
-.feed-color-2 { background-color: #ffff99; }
-feed-color-3 { background-color: #ccff99; }
-.feed-color-4 { background-color: #99ff99; }
-.feed-color-5 { background-color: #99ffcc; }
-.feed-color-6 { background-color: #99ffff; }
-.feed-color-7 { background-color: #99ccff; }
-.feed-color-8 { background-color: #9999ff; }
-.feed-color-9 { background-color: #cc99ff; }
+.modal-content img {
+    max-width: 50%; /* Reduce the size of images by 50% */
+}
 
 .modal-content {
     background: #fff;

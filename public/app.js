@@ -25,7 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 const modal = document.getElementById('article-modal');
                 const articleContent = document.getElementById('article-content');
-                articleContent.innerHTML = data.content;
+                if (data.content) {
+                    articleContent.innerHTML = data.content;
+                } else {
+                    articleContent.innerHTML = `Article content not found, <a href="${this.link}" target="_blank">read the article here</a>.`;
+                }
                 modal.style.display = 'flex';
                 document.title = this.title;
             } catch (error) {
@@ -270,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
             feedContainer.appendChild(articleDiv);
         });
     }
-    
 
     function updateRSSFeedList() {
         const rssFeedList = document.getElementById('rss-feed-list');
@@ -353,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
         displayCategories(currentFeed);
         displayFeed(currentFeed.allArticles);
     }
-    
+
     function updateGridLayout() {
         const feedContainer = document.getElementById('feeds');
         if (window.innerWidth <= 768) {
@@ -371,8 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the grid layout on page load and window resize
     window.addEventListener('resize', updateGridLayout);
     updateGridLayout();
-
-
 
     function mergeFeeds(feeds) {
         const mergedFeed = new Feed();
